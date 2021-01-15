@@ -4,6 +4,9 @@
 
 //这个算法用来得到整个集合值的和
 //只能得到first到last与init的和
+#include"iterator.h"
+#include"type_traits.h"
+
 template<class InputIterator, class T>
 T accumulate(InputIterator first, InputIterator last, T init){
     for(;first != last; ++first){
@@ -12,6 +15,16 @@ T accumulate(InputIterator first, InputIterator last, T init){
     return init;
 }
 
+
+template<class InputIterator>
+typename iterator_traits<InputIterator>::difference_type
+accumulate(InputIterator first, InputIterator last){
+    typename iterator_traits<InputIterator>::difference_type init = 0;
+    for(;first != last; ++first){
+        init = init + *first;
+    }
+    return init;
+}
 
 //加法规则：按binary_op的约定做加法
 template<class InputIterator, class T, class BinaryOperation>
@@ -63,6 +76,16 @@ OutputIterator adjacent_difference(InputIterator first, InputIterator last,
 template<class InputIterator1, class InputIterator2, class T>
 T inner_product(InputIterator1 first1, InputIterator1 last1,
                 InputIterator2 first2, T init){
+    for(; first1 != last1; ++first1, ++first2){
+        init = init + (*first1 * *first2);
+    }
+    return init;
+}
+
+template<class InputIterator1, class InputIterator2>
+typename iterator_traits<InputIterator1>::difference_type
+inner_product(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2){
+    typename iterator_traits<InputIterator1>::difference_type init = 0;
     for(; first1 != last1; ++first1, ++first2){
         init = init + (*first1 * *first2);
     }

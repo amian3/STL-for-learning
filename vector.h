@@ -28,7 +28,7 @@ class vector{
                 construct(finish, *(finish - 1));
                 ++finish;//先增加finish的位置
                 T x_copy = x;
-                copy_backward(position, finish - 2, finish - 1);//也许是算法内函数
+                copy_backward(position, finish - 2, finish - 1);//算法内函数
                 //其作用是将position以后的内容依次后移
                 *position = x_copy;
                 //空出来的position放置x
@@ -148,6 +148,9 @@ class vector{
         //insert 应实现两个版本
         //在position插入x和在position插入n个x
         iterator insert(iterator position, const T& x){
+            if(position == finish)//finish确实特殊，因为要保证不会调用copy backward
+                push_back(x);
+            else
             insert_aux(position, x);
         }
         //这个insert的写法是为了加快速度

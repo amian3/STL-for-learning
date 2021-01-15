@@ -81,7 +81,8 @@ value_type(const Iterator&){
 
 //distance函数
 //两个_distance函数用来处理不同的迭代器
-//最终client只会用到distance函数
+//distance和advance主要是为了不同种类的迭代器可以用同样的算法来实现
+//只不过一些是first + n 一些是advance(first, n)
 //InputIterator是没有+n操作的因此要用到while
 template<class InputIterator>
 inline typename iterator_traits<InputIterator>::difference_type

@@ -16,7 +16,7 @@ class _malloc_alloc_template{
 
     private:
         //oom i.e. out of memory
-        //这三个函数用来处理内存不足的情况，具体还需要继续看源码，请注意
+        //这三个函数用来处理内存不足的情况
         static void *oom_malloc(size_t);
         static void *oom_realloc(void *, size_t);
         static void (* _malloc_alloc_oom_handler)();

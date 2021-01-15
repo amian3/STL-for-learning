@@ -2,7 +2,7 @@
 #define PAIR_H_INCLUDED
 //这是一个二元数对的结构
 //在algobase中用于mismatch的返回值
-//这只是一个范例，实际上iostream有这个struct并不用自己写
+//在algo文件中作为equal range的返回值
 template<class T1, class T2>
 struct pair{
     T1 first;
