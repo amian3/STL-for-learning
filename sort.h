@@ -175,6 +175,103 @@ void sort_heap(RandomAccessIterator first, RandomAccessIterator last){
 }
 */
 
+template<class RandomAccessIterator, class Compare, class Distance, class T>
+void _push_heap(RandomAccessIterator first, Compare comp, Distance holeIndex,
+                Distance topIndex, T value){
+    Distance parent = (holeIndex - 1) / 2;
+    while(holeIndex > topIndex && comp(*(first + parent), value)){
+        *(first + holeIndex) = *(first + parent);
+        holeIndex = parent;
+        parent = (holeIndex - 1) / 2;
+    }
+    *(first + holeIndex) = value;
+
+}
+
+template<class RandomAccessIterator, class Compare, class Distance, class T>
+inline void _push_heap_aux(RandomAccessIterator first, RandomAccessIterator last,
+                           Compare comp, Distance*, T*){
+    _push_heap(first, comp, Distance((last - first) - 1), Distance(0), T(*(last - 1)));
+}
+
+
+template<class RandomAccessIterator, class Compare>
+inline void push_heap(RandomAccessIterator first,
+                      RandomAccessIterator last, Compare comp){
+    _push_heap_aux(first, last, comp, distance_type(first), value_type(first));
+
+}
+
+template<class RandomAccessIterator, class Compare, class Distance, class T>
+void _adjust_heap(RandomAccessIterator first, Compare comp, Distance holeIndex,
+                  Distance len, T value){
+    Distance topIndex = holeIndex;
+    Distance secondChild = 2 * holeIndex + 2;
+    while(secondChild < len){
+        if(comp(*(first + secondChild), *(first + (secondChild - 1))))
+            secondChild--;
+        *(first + holeIndex) = *(first + secondChild);
+        holeIndex = secondChild;
+        secondChild = 2 * (secondChild + 1);
+    }
+    if(secondChild == len){
+        *(first + holeIndex) = *(first + (secondChild - 1));
+        holeIndex = secondChild - 1;
+    }
+
+    _push_heap(first, comp, holeIndex, topIndex, value);
+
+}
+
+template<class RandomAccessIterator, class Compare, class T, class Distance>
+inline void _pop_heap(RandomAccessIterator first, RandomAccessIterator last,
+                      RandomAccessIterator result, Compare comp, T value, Distance*){
+    *result = *first;
+    _adjust_heap(first, comp, Distance(0), Distance(last - first), value);
+}
+
+template<class RandomAccessIterator, class Compare, class T>
+inline void _pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last,
+                          Compare comp, T*){
+    _pop_heap(first, last - 1, last - 1, comp, T(*(last - 1)), distance_type(first));
+}
+
+template<class RandomAccessIterator, class Compare>
+inline void pop_heap(RandomAccessIterator first,
+                     RandomAccessIterator last, Compare comp){
+    _pop_heap_aux(first, last, comp, value_type(first));
+
+}
+
+template<class RandomAccessIterator, class Compare>
+void sort_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp){
+    while(last - first > 1)
+        pop_heap(first, last--, comp);
+}
+
+template<class RandomAccessIterator, class Compare, class T, class Distance>
+void _make_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp,
+                T*, Distance*){
+    if(last - first < 2)
+        return;
+    Distance len = last - first;
+    Distance parent = (len - 2) / 2;
+    while(true){
+        _adjust_heap(first, comp, parent, len, T(*(first + parent)));
+        if(parent == 0)
+            return;
+        parent--;
+    }
+}
+
+template<class RandomAccessIterator, class Compare>
+inline void make_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp){
+    _make_heap(first, last, comp, value_type(first), distance_type(first));
+}
+
+
+
+
 
 //插入排序,N^2复杂度
 //把value插入到last为尾部的序列，保持顺序
@@ -210,6 +307,41 @@ void _insertion_sort(RandomAccessIterator first, RandomAccessIterator last){
     }
 }
 
+template<class RandomAccessIterator, class Compare, class T>
+void _unguarded_linear_insert(RandomAccessIterator last, Compare comp, T value){
+    RandomAccessIterator next = last;
+    --next;
+    while(comp(value,*next)){
+        *last = *next;
+        last = next;
+        --next;
+    }
+    *last = value;
+}
+
+template<class RandomAccessIterator, class Compare, class T>
+inline void _linear_insert(RandomAccessIterator first, RandomAccessIterator last,
+                           Compare comp, T*){
+    T value = *last;
+    if(comp(value,*first)){
+        copy_backward(first, last, last + 1);
+        *first = value;
+    }
+    else
+        _unguarded_linear_insert(last, comp, value);
+}
+
+template<class RandomAccessIterator, class Compare>
+void _insertion_sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp){
+    if(first == last)
+        return;
+    for(RandomAccessIterator i = first + 1; i != last; ++i){
+        _linear_insert(first, i, comp, value_type(first));
+    }
+}
+
+
+
 const int _stl_threshold = 16;
 
 //partial sort应用堆排序，把最小元素放到first和middle之间，其余的不保证顺序
@@ -231,6 +363,25 @@ inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle
                          RandomAccessIterator last){
     _partial_sort(first, middle, last, value_type(first));
 }
+
+
+template<class RandomAccessIterator, class Compare, class T>
+void _partial_sort(RandomAccessIterator first, RandomAccessIterator middle,
+                   RandomAccessIterator last, Compare comp, T*){
+    make_heap(first, middle, comp);
+    for(RandomAccessIterator i = middle; i < last; ++i){
+        if(*i < *first)
+            _pop_heap(first, middle, i, comp, T(*i), distance_type(first));
+    }
+    sort_heap(first, middle, comp);
+}
+
+template<class RandomAccessIterator, class Compare>
+inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle,
+                         RandomAccessIterator last, Compare comp){
+    _partial_sort(first, middle, last, comp, value_type(first));
+}
+
 
 
 template<class T>
@@ -341,6 +492,7 @@ inline void sort(RandomAccessIterator first, RandomAccessIterator last){
         _final_insertion_sort(first, last);
     }
 }
+
 //这里提供一个只使用快速排序的版本
 
 /*
@@ -371,4 +523,128 @@ inline void quick_sort(RandomAccessIterator first, RandomAccessIterator last){
 
 }
 */
+
+template<class T, class Compare>
+inline const T& _median(const T& a, const T& b, const T& c, Compare comp){
+    if(comp(a, b))
+        if(comp(b, c))
+            return b;
+        else if(comp(a, c))
+            return c;
+        else
+            return a;
+    else if(comp(a, c))
+        return a;
+    else if(comp(b, c))
+        return c;
+    else
+        return b;
+}
+
+template<class RandomAccessIterator, class Compare, class T>
+RandomAccessIterator _unguarded_partition(RandomAccessIterator first,
+                                          RandomAccessIterator last,
+                                          Compare comp, T pivot){
+    while(true){
+        while(comp(*first, pivot))
+            ++first;
+        --last;
+        while(comp(pivot, *last))
+            --last;
+        if(!(first < last))
+            return first;
+        iter_swap(first, last);
+        ++first;
+    }
+}
+
+template<class RandomAccessIterator, class Compare, class T, class Size>
+void _introsort_loop(RandomAccessIterator first, RandomAccessIterator last,
+                     Compare comp, T*, Size depth_limit){
+    while(last - first > _stl_threshold){
+        if(depth_limit == 0){
+            partial_sort(first, last, last, comp);
+            return;
+        }
+        --depth_limit;
+        RandomAccessIterator cut = _unguarded_partition
+        (first, last, comp, T(_median(*first, *(first + (last - first) / 2), *(last - 1))));
+        _introsort_loop(cut, last, comp, value_type(first), depth_limit);
+        last = cut;
+    }
+}
+
+template<class RandomAccessIterator, class Compare, class T>
+void _unguarded_insertion_sort_aux(RandomAccessIterator first, RandomAccessIterator last,
+                                   Compare comp, T*){
+    for(RandomAccessIterator i = first;i != last; ++i){
+        _unguarded_linear_insert(i, comp, T(*i));
+    }
+}
+
+template<class RandomAccessIterator, class Compare>
+inline void _unguarded_insertion_sort(RandomAccessIterator first, RandomAccessIterator last,
+                                      Compare comp){
+    _unguarded_insertion_sort_aux(first, last, comp, value_type(first));
+
+}
+
+template<class RandomAccessIterator, class Compare>
+void _final_insertion_sort(RandomAccessIterator first, RandomAccessIterator last,
+                           Compare comp){
+    if(last - first > _stl_threshold){
+        _insertion_sort(first, first + _stl_threshold, comp);
+        _unguarded_insertion_sort(first + _stl_threshold, last, comp);
+    }
+    else
+        _insertion_sort(first, last, comp);
+}
+
+template<class RandomAccessIterator, class Compare>
+inline void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp){
+    if(first != last){
+        _introsort_loop(first, last, comp, value_type(first), _lg(last - first) * 2);
+        _final_insertion_sort(first, last, comp);
+    }
+}
+
+template<class RandomAccessIterator, class T>
+void _nth_element(RandomAccessIterator first, RandomAccessIterator nth,
+                  RandomAccessIterator last, T*){
+    while(last - first > 3){
+        RandomAccessIterator cut = _unguarded_partition
+        (first, last, T(_median(*first, *(first + (last - first) / 2), *(last - 1))));
+        if(cut <= nth)
+            first = cut;
+        else
+            last = cut;
+    }
+    _insertion_sort(first, last);
+}
+
+template<class RandomAccessIterator>
+inline void nth_element(RandomAccessIterator first, RandomAccessIterator nth,
+                        RandomAccessIterator last){
+    _nth_element(first, nth, last, value_type(first));
+}
+
+template<class RandomAccessIterator, class T, class Compare>
+void _nth_element(RandomAccessIterator first, RandomAccessIterator nth,
+                  RandomAccessIterator last, Compare comp, T*){
+    while(last - first > 3){
+        RandomAccessIterator cut = _unguarded_partition
+        (first, last, comp, T(_median(*first, *(first + (last - first) / 2), *(last - 1))));
+        if(cut <= nth)
+            first = cut;
+        else
+            last = cut;
+    }
+    _insertion_sort(first, last);
+}
+
+template<class RandomAccessIterator, class Compare>
+inline void nth_element(RandomAccessIterator first, RandomAccessIterator nth,
+                        RandomAccessIterator last, Compare comp){
+    _nth_element(first, nth, last, comp, value_type(first));
+}
 #endif // SORT_H_INCLUDED

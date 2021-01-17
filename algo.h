@@ -70,57 +70,59 @@ InputIterator find_if(InputIterator first, InputIterator last,
 
 //查找[first2,last2)在[first1,last1)最后一次出现的地点
 //分成ForwardIterator和BidirectionalIterator两种
-//template<class ForwardIterator1, class ForwardIterator2>
-//ForwardIterator1 _find_end(ForwardIterator1 first1, ForwardIterator1 last1,
-//                           ForwardIterator2 first2, ForwardIterator2 last2,
-//                           forward_iterator_tag, forward_iterator_tag){
-//    if(first2 == last2)return last1;
-//    else{
-//        ForwardIterator1 result = last1;
-//        while(true){
-//            ForwardIterator1 new_result = search(first1, last1, first2, last2);
-//            if(new_result == last1)
-//                return result;
-//            else{
-//                result = new_result;
-//                first1 = new_result;
-//                ++first1;
-//            }
-//        }
-//    }
-//}
-//
-//template<class BidirectionalIterator1, class BidirectionalIterator2>
-//BidirectionalIterator1 _find_end(
-//    BidirectionalIterator1 first1, BidirectionalIterator1 last1,
-//    BidirectionalIterator2 first2, BidirectionalIterator2 last2,
-//    bidirectional_iterator_tag, bidirectional_iterator_tag){
-//    typedef reverse_iterator<BidirectionalIterator1> reviter1;
-//    typedef reverse_iterator<BidirectionalIterator2> reviter2;
-//    reviter1 rlast1(first1);
-//    reviter2 rlast2(first2);
-//    reviter1 rresult = search(reviter1(last1), rlast1,
-//                              reviter2(last2), rlast2);
-//    if(rresult == rlast1)
-//        return last1;
-//    else{
-//        BidirectionalIterator1 result = rresult.base();
-//        advance(result, -distance(first2, last2));
-//        return result;
-//    }
-//}
-//
-//template<class ForwardIterator1, class ForwardIterator2>
-//inline ForwardIterator1
-//find_end(ForwardIterator1 first1, ForwardIterator1 last1,
-//         ForwardIterator2 first2, ForwardIterator2 last2){
-//    typedef typename iterator_traits<ForwardIterator1>::iterator_category
-//    category1;
-//    typedef typename iterator_traits<ForwardIterator2>::iterator_category
-//    category2;
-//    return _find_end(first1, last1, first2, last2, category1(), category2());
-//}
+//以下内容缺少反向迭代器
+/*
+template<class ForwardIterator1, class ForwardIterator2>
+ForwardIterator1 _find_end(ForwardIterator1 first1, ForwardIterator1 last1,
+                           ForwardIterator2 first2, ForwardIterator2 last2,
+                           forward_iterator_tag, forward_iterator_tag){
+    if(first2 == last2)return last1;
+    else{
+        ForwardIterator1 result = last1;
+        while(true){
+            ForwardIterator1 new_result = search(first1, last1, first2, last2);
+            if(new_result == last1)
+                return result;
+            else{
+                result = new_result;
+                first1 = new_result;
+                ++first1;
+            }
+        }
+    }
+}
 
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+BidirectionalIterator1 _find_end(
+    BidirectionalIterator1 first1, BidirectionalIterator1 last1,
+    BidirectionalIterator2 first2, BidirectionalIterator2 last2,
+    bidirectional_iterator_tag, bidirectional_iterator_tag){
+    typedef reverse_iterator<BidirectionalIterator1> reviter1;
+    typedef reverse_iterator<BidirectionalIterator2> reviter2;
+    reviter1 rlast1(first1);
+    reviter2 rlast2(first2);
+    reviter1 rresult = search(reviter1(last1), rlast1,
+                              reviter2(last2), rlast2);
+    if(rresult == rlast1)
+        return last1;
+    else{
+        BidirectionalIterator1 result = rresult.base();
+        advance(result, -distance(first2, last2));
+        return result;
+    }
+}
+
+template<class ForwardIterator1, class ForwardIterator2>
+inline ForwardIterator1
+find_end(ForwardIterator1 first1, ForwardIterator1 last1,
+         ForwardIterator2 first2, ForwardIterator2 last2){
+    typedef typename iterator_traits<ForwardIterator1>::iterator_category
+    category1;
+    typedef typename iterator_traits<ForwardIterator2>::iterator_category
+    category2;
+    return _find_end(first1, last1, first2, last2, category1(), category2());
+}
+*/
 //找出[first2,last2)里首个在[first1,last1)出现的内容
 //比如从synesthesia中查找aeiou，就会返回synesthesia中的e
 template<class InputIterator, class ForwardIterator>
@@ -567,6 +569,34 @@ inline ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
     }
     return first1;
 }
+
+template<class ForwardIterator1, class ForwardIterator2, class BinaryPredicate>
+inline ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
+                               ForwardIterator2 first2, ForwardIterator2 last2,
+                               BinaryPredicate binary_pred){
+    typename iterator_traits<ForwardIterator1>::difference_type d1 = distance(first1, last1);
+    typename iterator_traits<ForwardIterator1>::difference_type d2 = distance(first2, last2);
+    if(d1 < d2)return last1;
+    ForwardIterator1 current1 = first1;
+    ForwardIterator2 current2 = first2;
+    while(current2 != last2){
+        if(binary_pred(*current1, *current2)){
+            ++current1;
+            ++current2;
+        }
+        else{
+            if(d1 == d2)
+                return last1;
+            else{
+                current1 = ++first1;
+                current2 = first2;
+                --d1;
+            }
+        }
+    }
+    return first1;
+}
+
 //查找value连续出现n次的第一个索引
 template<class ForwardIterator, class Integer, class T>
 ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
@@ -757,6 +787,58 @@ inline ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last,
                         iterator_category(first));
 }
 
+
+template<class ForwardIterator, class T, class Compare, class Distance>
+ForwardIterator _lower_bound(ForwardIterator first, ForwardIterator last, const T& value,
+                             Compare comp, Distance*, forward_iterator_tag){
+    Distance len = distance(first, last);
+    Distance half;
+    ForwardIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first;
+        advance(middle, half);
+        if(comp(*middle, value)){
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+        else{
+            len = half;
+        }
+    }
+    return first;
+}
+
+template<class RandomAccessIterator, class T, class Compare, class Distance>
+RandomAccessIterator _lower_bound(RandomAccessIterator first, RandomAccessIterator last, const T& value,
+                                  Compare comp, Distance*, random_access_iterator_tag){
+    Distance len = last - first;
+    Distance half;
+    RandomAccessIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first + half;
+        if(comp(*middle, value)){
+            first = middle + 1;
+            len = len - half - 1;
+        }
+        else{
+            len = half;
+        }
+    }
+    return first;
+
+}
+
+template<class ForwardIterator, class T, class Compare>
+inline ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last,
+                                   const T& value, Compare comp){
+    return _lower_bound(first, last, value, comp, distance_type(first),
+                        iterator_category(first));
+}
+
+
 //查找大于value的第一个迭代器(有可能是last)
 template<class ForwardIterator, class T, class Distance>
 ForwardIterator _upper_bound(ForwardIterator first, ForwardIterator last,
@@ -806,11 +888,68 @@ inline ForwardIterator upper_bound(ForwardIterator first, ForwardIterator last,
                         iterator_category(first));
 }
 
+
+template<class ForwardIterator, class T, class Compare, class Distance>
+ForwardIterator _upper_bound(ForwardIterator first, ForwardIterator last, const T& value,
+                             Compare comp, Distance*, forward_iterator_tag){
+    Distance len = distance(first, last);
+    Distance half;
+    ForwardIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first;
+        advance(middle, half);
+        if(comp(value, *middle))
+            len = half;
+        else{
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
+
+template<class RandomAccessIterator, class T, class Compare, class Distance>
+RandomAccessIterator _upper_bound(RandomAccessIterator first, RandomAccessIterator last, const T& value,
+                                  Compare comp, Distance*, random_access_iterator_tag){
+    Distance len = last - first;
+    Distance half;
+    RandomAccessIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first;
+        middle = first + half;
+        if(comp(value, *middle))
+            len = half;
+        else{
+            first = middle + 1;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
+
+template<class ForwardIterator, class T, class Compare>
+inline ForwardIterator upper_bound(ForwardIterator first, ForwardIterator last,
+                                   const T& value, Compare comp){
+    return _upper_bound(first, last, value, comp, distance_type(first),
+                        iterator_category(first));
+}
+
+
 //需要!(value < *i)是因为可能出现13579里查找6
 template<class ForwardIterator, class T>
 bool binary_search(ForwardIterator first, ForwardIterator last,
                    const T& value){
     ForwardIterator i = lower_bound(first, last, value);
+    return i != last && !(value < *i);
+}
+
+template<class ForwardIterator, class T, class Compare>
+bool binary_search(ForwardIterator first, ForwardIterator last,
+                   const T& value, Compare comp){
+    ForwardIterator i = lower_bound(first, last, value, comp);
     return i != last && !(value < *i);
 }
 
@@ -935,25 +1074,72 @@ inline pair<ForwardIterator, ForwardIterator>
 equal_range(ForwardIterator first, ForwardIterator last, const T& value){
     return _equal_range(first, last, value, distance_type(first), iterator_category(first));
 }
-//重排序列，first到nth所指位置放小的，nth到last放大的
-//内部不保证有序
-template<class RandomAccessIterator, class T>
-void _nth_element(RandomAccessIterator first, RandomAccessIterator nth,
-                  RandomAccessIterator last, T*){
-    while(last - first > 3){
-        RandomAccessIterator cut = _unguarded_partition
-        (first, last, T(_median(*first, *(first + (last - first) / 2), *(last - 1))));
-        if(cut <= nth)
-            first = cut;
-        else
-            last = cut;
+
+
+template<class RandomAccessIterator, class T, class Compare, class Distance>
+pair<RandomAccessIterator, RandomAccessIterator>
+_equal_range(RandomAccessIterator first, RandomAccessIterator last,
+             const T& value, Compare comp, Distance*, random_access_iterator_tag){
+    Distance len = last - first;
+    Distance half;
+    RandomAccessIterator middle, left, right;
+    while(len > 0){
+        half = len >> 1;
+        middle = first + half;
+        if(comp(*middle, value)){
+            first = middle + 1;
+            len = len - half - 1;
+        }
+        else if(comp(value, *middle)){
+            len = half;
+        }
+        else{
+            left = lower_bound(first, middle, value, comp);
+            right = upper_bound(++middle, first + len, value, comp);
+            return pair<RandomAccessIterator, RandomAccessIterator>(left, right);
+        }
     }
-    _insertion_sort(first, last);
+
+    return pair<RandomAccessIterator, RandomAccessIterator>(first, first);
 }
 
-template<class RandomAccessIterator>
-inline void nth_element(RandomAccessIterator first, RandomAccessIterator nth,
-                        RandomAccessIterator last){
-    _nth_element(first, nth, last, value_type(first));
+template<class ForwardIterator, class T, class Compare, class Distance>
+pair<ForwardIterator, ForwardIterator>
+_equal_range(ForwardIterator first, ForwardIterator last, const T& value,
+             Compare comp, Distance*, forward_iterator_tag){
+    Distance len = distance(first, last);
+    Distance half;
+    ForwardIterator middle, left, right;
+    while(len > 0){
+        half = len >> 1;
+        middle = first;
+        advance(middle, half);
+        if(comp(*middle, value)){
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+        else if(comp(value, *middle)){
+            len = half;
+        }
+        else{
+            left = lower_bound(first, middle, value, comp);
+            advance(first, len);
+            right = upper_bound(++middle, first, value, comp);
+            return pair<ForwardIterator, ForwardIterator>(left, right);
+        }
+    }
+    return pair<ForwardIterator, ForwardIterator>(first, first);
 }
+
+template<class ForwardIterator, class T, class Compare>
+inline pair<ForwardIterator, ForwardIterator>
+equal_range(ForwardIterator first, ForwardIterator last,
+            const T& value, Compare comp){
+    return _equal_range(first, last, value, comp, distance_type(first),
+                        iterator_category(first));
+}
+
+
+
 #endif // ALGO_H_INCLUDED

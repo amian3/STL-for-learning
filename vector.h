@@ -70,7 +70,7 @@ class vector{
         }
 
         void fill_initialize(size_type n, const T& value){
-            start = allocate_and_fill(n, value);//尚未找到这个函数的位置
+            start = allocate_and_fill(n, value);//在尾部
             finish = start + n;
             end_of_storage = finish;
         }
@@ -80,7 +80,7 @@ class vector{
         iterator end(){return finish;}
         size_type size() const{return size_type(finish - start);}
         size_type capacity() const{return size_type(end_of_storage - start);}
-        bool empty() const{return begin() == end();}
+        bool empty() {return begin() == end();}
         reference operator[](size_type n){return *(begin() + n);}//这就是能用[]索引的原因
 
         //以下是构造函数
@@ -92,6 +92,13 @@ class vector{
         //explicit(显式)取消了隐式转换
         //因此只能通过vector<int> a(10)来定义
         //不能通过vector<int> a = 10定义
+        template<class InputIterator>
+        vector(InputIterator first, InputIterator last)
+        : start(0), finish(0), end_of_storage(0){
+            for(; first != last; ++first){
+                push_back(*first);
+            }
+        }
 
         ~vector(){
             destroy(start, finish);//全局函数

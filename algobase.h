@@ -225,6 +225,8 @@ struct _copy_dispatch{
 //至于为什么这么操作
 //因为以n为for loop的条件速度比以迭代器为条件快
 //如果是，那么考虑有没有trivial assignment operator以加速
+
+//仿函数写法
 template<class T>
 struct _copy_dispatch<T*, T*>{
     T* operator()(T* first, T* last, T* result){
