@@ -12,21 +12,6 @@
 //这个函数的返回值是被输入内容的尾端(first + n)
 
 //这个地方似乎不能做优化，因为first的value type也是一个template
-template<class ForwardIterator, class Size, class T, class T1>
-inline ForwardIterator
-_uninitialized_fill_n(ForwardIterator first, Size n, const T& x, T1*){
-    typedef typename _type_traits<T1>::is_POD_type is_POD;
-    return _uninitialized_fill_n_aux(first, n, x, is_POD());
-
-}
-
-template<class ForwardIterator, class Size, class T>
-inline ForwardIterator
-uninitialized_fill_n(ForwardIterator first, Size n, const T& x){
-    return _uninitialized_fill_n(first, n, x, value_type(first));
-}
-
-
 
 template<class ForwardIterator, class Size, class T>
 inline ForwardIterator
@@ -49,6 +34,24 @@ _uninitialized_fill_n_aux(ForwardIterator first, Size n, const T& x, _false_type
         throw;
     }
 }
+
+template<class ForwardIterator, class Size, class T, class T1>
+inline ForwardIterator
+_uninitialized_fill_n(ForwardIterator first, Size n, const T& x, T1*){
+    typedef typename _type_traits<T1>::is_POD_type is_POD;
+    return _uninitialized_fill_n_aux(first, n, x, is_POD());
+
+}
+
+template<class ForwardIterator, class Size, class T>
+inline ForwardIterator
+uninitialized_fill_n(ForwardIterator first, Size n, const T& x){
+    return _uninitialized_fill_n(first, n, x, value_type(first));
+}
+
+
+
+
 
 
 

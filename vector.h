@@ -68,6 +68,26 @@ class vector{
             if(start)
                 data_allocator::deallocate(start, end_of_storage - start);
         }
+        iterator allocate_and_fill(size_type n, const T& x){
+            iterator result = data_allocator::allocate(n);
+            uninitialized_fill_n(result, n, x);//全局函数
+            return result;
+        }
+
+        template<class ForwardIterator>
+        iterator allocate_and_copy(size_type n, ForwardIterator first,
+                                   ForwardIterator last){
+            iterator result = data_allocator::allocate(n);
+            try{
+                uninitialized_copy(first, last, result);
+                return result;
+            }
+            catch(...){
+                data_allocator::deallocate(result, n);
+                throw;
+            }
+
+        }
 
         void fill_initialize(size_type n, const T& value){
             start = allocate_and_fill(n, value);//在尾部
@@ -209,12 +229,30 @@ class vector{
 
         }
 
-    protected:
-        iterator allocate_and_fill(size_type n, const T& x){
-            iterator result = data_allocator::allocate(n);
-            uninitialized_fill_n(result, n, x);//全局函数
-            return result;
+        void reserve(size_type n){
+            //如果现在的capacity大于等于n(装得下n个)
+            //无变化
+            //如果装不下，就把vector复制到一个新的空间中，capacity改成n
+            //服务于hash的函数
+            if(capacity() < n){
+                size_type old_size = size();
+                iterator tmp = allocate_and_copy(n, start, finish);
+                destroy(start, finish);
+                deallocate();
+                start = tmp;
+                finish = tmp + old_size;
+                end_of_storage = start + n;
+            }
         }
+
+        void swap(vector<T, Alloc>& x){
+            std::swap(start, x.start);
+            std::swap(finish, x.finish);
+            std::swap(end_of_storage, x.end_of_storage);
+
+        }
+
+
 };
 
 #endif // VECTOR_H

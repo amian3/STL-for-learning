@@ -8,7 +8,7 @@
 //因为他是通过组连续，而不同组之间用链表连接的
 //因此它的随机访问属实没vector快
 inline size_t _deque_buf_size(size_t n, size_t sz){//size_t就是 long long unsigned int
-    return n != 0 ? n : (sz < 512 ? size_t(512 / sz) : size_t(1));
+    return n != 0 ? n : (sz < 16 ? size_t(16 / sz) : size_t(1));
     //如果n != 0返回n
     //如果n = 0但sz < 512 返回 512/sz
     //如果n = 0而且sz > 512 那返回1
@@ -301,18 +301,18 @@ class deque{
             start.set_node(new_nstart);
             finish.set_node(new_nstart + old_num_nodes - 1);
 
-            return add_at_front ?  start : finish;
+           // return add_at_front ?  start : finish;
 
         }
 
-        iterator reserve_map_at_back(size_type nodes_to_add = 1){
+        void reserve_map_at_back(size_type nodes_to_add = 1){
             if(nodes_to_add + 1 > map_size - (finish.node - map))//要保证尾部剩一个
-                return reallocate_map(nodes_to_add, false);
+                 reallocate_map(nodes_to_add, false);
         }
 
-        iterator reserve_map_at_front(size_type nodes_to_add = 1){
+        void reserve_map_at_front(size_type nodes_to_add = 1){
             if(nodes_to_add > start.node - map)//新的start已经越过了map
-                return reallocate_map(nodes_to_add, true);
+                 reallocate_map(nodes_to_add, true);
         }
 
         void push_back_aux(const value_type& t){
@@ -510,73 +510,6 @@ class deque{
             *pos = x_copy;
             return pos;
         }
-        iterator insert_aux(iterator pos, size_type n, const value_type& x){
-            //这样处理主要是因为有些内容需要初始化
-            //有些内容已经初始化了
-            //有些内容是复制的
-            //有些内容是赋值的
-            //有些内容要从后往前复制
-            value_type x_copy = x;
-            difference_type index = pos - start;
-            if(index < size() / 2){
-                iterator new_start = reserve_map_at_front(n);
-                iterator old_start = start;//这么做主要是为了安全
-                try{
-                    if(index >= difference_type(n)){
-                        iterator start_n = start + difference_type(n);
-                        uninitialized_copy(start, start_n, new_start);
-                        start = new_start;
-                        copy(start_n, pos, old_start);
-                        fill(pos - difference_type(n), pos, x_copy);
-                    }//如果复制的内容数量小于pos的索引则应该分两步
-                    else{
-                        uninitialized_copy(start, pos, new_start);
-                        start = new_start;
-                        uninitialized_fill(old_start - difference_type(n), old_start, x_copy);
-                        fill(old_start, pos, x_copy);
-                    }
-                }
-                catch(...){
-                    for(map_pointer n = new_start.node; n < start.node; ++n){
-                        deallocate_node(*n);
-                    }
-                    throw;
-                }
-
-            }
-            else{//待测试函数，整体思路和上一致
-                index = finish - pos;
-                iterator new_finish = reserve_map_at_back(n);
-                iterator old_finish = finish;
-                try{
-                    if(index >= difference_type(n)){
-                        iterator finish_n = finish - difference_type(n);
-                        uninitialized_copy(finish_n, finish, finish);
-                        finish = new_finish;
-                        copy_backward(pos, finish_n, old_finish);
-                        fill(pos, pos + difference_type(n), x_copy);
-                    }
-                    else{
-                        uninitialized_copy(pos, finish, pos + difference_type(n));
-                        finish = new_finish;
-                        uninitialized_fill(old_finish, pos + difference_type(n), x_copy);
-                        fill(pos, old_finish, x_copy);
-                    }
-                }
-                catch(...){
-                    for(map_pointer n = new_finish.node; n > finish.node; --n){
-                        deallocate_node(*n);
-                    }
-                    throw;
-                }
-
-            }
-            *pos = x_copy;
-            return pos;
-        }
-
-
-
 
     public:
         iterator insert(iterator position, const value_type& x){
@@ -595,23 +528,11 @@ class deque{
             }
         }
 
+
+
+    public:
         iterator insert(iterator position, size_type n, const value_type& x){
-            if(position.cur == start.cur){
-                iterator new_start = reserve_map_at_front(n);
-                uninitialized_fill(new_start, start, x);
-                start = new_start;
-                return start;
-            }
-            else if(position.cur == finish.cur){
-                iterator new_finish = reserve_map_at_back(n);
-                uninitialized_fill(finish, new_finish, x);
-                finish = new_finish;
-                iterator tmp = finish;
-                --tmp;
-                return tmp;
-            }
-            else
-                return insert_aux(position, n, x);
+
 
         }
 

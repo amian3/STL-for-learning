@@ -6,7 +6,7 @@
 //只能得到first到last与init的和
 #include"iterator.h"
 #include"type_traits.h"
-
+#include"functional.h"
 template<class InputIterator, class T>
 T accumulate(InputIterator first, InputIterator last, T init){
     for(;first != last; ++first){
@@ -137,7 +137,7 @@ OutputIterator partial_sum(InputIterator first, InputIterator last,
 
 //补充：partial sum 和 adjacent difference互为逆运算
 //这意味着 adjacent difference( partial sum( x ) ) == x
-/*
+
 template<class T, class Integer>
 inline T power(T x, Integer n){
     return power(x, n, multiplies<T>());//仿函数
@@ -147,14 +147,14 @@ inline T power(T x, Integer n){
 template<class T, class Integer, class MonoidOperation>
 T power(T x, Integer n, MonoidOperation op){
     if(n == 0)
-        return identity_element(op);仿函数
+        return identity_element(op);
     else{
         while(( n & 1) == 0){//折半相乘
             n >>= 1;
             x = op(x, x);
         }
         T result = x;
-        n >>= x;
+        n >>= 1;
         while(n != 0){
             x = op(x, x);
             if((n & 1) != 0)
@@ -163,7 +163,7 @@ T power(T x, Integer n, MonoidOperation op){
         }
         return result;
     }
-}*/
+}
 //为[first, last]赋值，按value的值递增
 //比如value = 2， [first，last] 长度为3
 //那么这部分的数据就会变成[2,3,4]
